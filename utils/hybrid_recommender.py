@@ -155,7 +155,7 @@ class HybridRecommender:
         # Perform fuzzy search
         matches = process.extract(
             query, 
-            products_df['search_string'].tolist(), 
+            products_df['search_string'].to_dict(), 
             limit=10,
             scorer=fuzz.token_sort_ratio
         )

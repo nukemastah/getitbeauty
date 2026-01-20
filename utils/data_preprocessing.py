@@ -264,6 +264,7 @@ def preprocess_all_data(sephora_path: str,
     # Combine products
     products_df = pd.concat([sephora_df, skincare_df], ignore_index=True)
     products_df = products_df.drop_duplicates(subset=['product_id'])
+    products_df = products_df.reset_index(drop=True)
     
     print(f"\nTotal products: {len(products_df)}")
     
