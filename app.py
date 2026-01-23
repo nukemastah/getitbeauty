@@ -184,7 +184,8 @@ def main():
             product_id = product_options.loc[selected_product_idx, 'product_id']
             st.subheader(f"Because you liked: *{product_options.loc[selected_product_idx, 'product_name']}*")
         elif skin_type:
-            st.subheader(f"Top picks for *{skin_type}* skin")
+            category_text = f" in *{selected_category}*" if selected_category != "All" else ""
+            st.subheader(f"Top picks for *{skin_type}* skin{category_text}")
         else:
             st.warning("Please select a product or a skin type to get recommendations.")
             st.stop()
@@ -194,6 +195,7 @@ def main():
                 product_id=product_id,
                 user_id=None,
                 skin_type=skin_type if skin_type else None,
+                category=selected_category if selected_category else None,
                 n_recommendations=n_recs,
                 alpha=0.5
             )

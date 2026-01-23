@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import pickle
 
 
@@ -93,13 +93,15 @@ class ContentBasedRecommender:
         
         return recommendations
     
-    def get_recommendations_by_skin_type(self, skin_type: str, n_recommendations: int = 10) -> pd.DataFrame:
+    def get_recommendations_by_skin_type(self, skin_type: str, n_recommendations: int = 10, 
+                                          category: Optional[str] = None) -> pd.DataFrame:
         """
         Get product recommendations based on skin type (cold start scenario).
         
         Args:
             skin_type: Target skin type
             n_recommendations: Number of recommendations
+            category: Optional product category to filter by (tertiary_category)
             
         Returns:
             DataFrame with recommended products
@@ -107,22 +109,34 @@ class ContentBasedRecommender:
         if self.products_df is None:
             raise ValueError("Model not trained. Call fit() first.")
         
+        # Start with all products
+        filtered = self.products_df.copy()
+        
+        # Filter by category if specified
+        if category and category != "All":
+            filtered = filtered[filtered['tertiary_category'] == category]
+        
         # Filter products by rating and reviews
-        filtered = self.products_df[
-            (self.products_df['rating'] >= 4.0) & 
-            (self.products_df['reviews'] >= 10)
+        quality_filtered = filtered[
+            (filtered['rating'] >= 4.0) & 
+            (filtered['reviews'] >= 10)
         ].copy()
         
-        if len(filtered) == 0:
-            filtered = self.products_df.copy()
+        # If no products match quality filter, use all filtered products
+        if len(quality_filtered) == 0:
+            quality_filtered = filtered.copy()
+        
+        # If still no products (category has none), return empty
+        if len(quality_filtered) == 0:
+            return pd.DataFrame()
         
         # Sort by popularity (rating * log(reviews + 1))
-        filtered['popularity_score'] = (
-            filtered['rating'] * np.log1p(filtered['reviews'])
+        quality_filtered['popularity_score'] = (
+            quality_filtered['rating'] * np.log1p(quality_filtered['reviews'])
         )
         
         # Get top products
-        recommendations = filtered.nlargest(n_recommendations, 'popularity_score')
+        recommendations = quality_filtered.nlargest(n_recommendations, 'popularity_score')
         recommendations['cb_score'] = recommendations['popularity_score'] / recommendations['popularity_score'].max()
         
         return recommendations

@@ -36,6 +36,7 @@ class HybridRecommender:
                                    product_id: str,
                                    user_id: Optional[int] = None,
                                    skin_type: Optional[str] = None,
+                                   category: Optional[str] = None,
                                    n_recommendations: int = 10,
                                    alpha: Optional[float] = None) -> pd.DataFrame:
         """
@@ -45,6 +46,7 @@ class HybridRecommender:
             product_id: Reference product ID (for CB similarity)
             user_id: User ID (for CF personalization). If None, uses CB only
             skin_type: Skin type (for cold start). Used if no product_id or user_id
+            category: Product category to filter recommendations (tertiary_category)
             n_recommendations: Number of recommendations to return
             alpha: Custom alpha value (overrides default)
             
@@ -57,9 +59,9 @@ class HybridRecommender:
         # Cold start: No user history and no product selected
         if product_id is None and user_id is None:
             if skin_type:
-                print(f"Cold start: Recommending based on skin type ({skin_type})...")
+                print(f"Cold start: Recommending based on skin type ({skin_type}) and category ({category})...")
                 recommendations = self.cb_recommender.get_recommendations_by_skin_type(
-                    skin_type, n_recommendations
+                    skin_type, n_recommendations, category=category
                 )
                 recommendations['hybrid_score'] = recommendations['cb_score']
                 recommendations['recommendation_type'] = 'cold_start'
