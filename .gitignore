@@ -18,8 +18,6 @@ ENV/
 *.ipynb
 
 # Models (large files)
-models/*.pkl
-models/*.joblib
 
 # IDE
 .vscode/
@@ -39,7 +37,7 @@ Thumbs.db
 *.log
 
 # Data (keep structure but ignore large files)
-dataset/**/*.csv
+
 
 # Keep important files
 !requirements.txt
