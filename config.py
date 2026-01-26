@@ -12,11 +12,11 @@ MODELS_DIR = os.path.join(BASE_DIR, 'models')
 SEPHORA_PRODUCTS_PATH = os.path.join(DATASET_DIR, 'sephora', 'product_info.csv')
 SKINCARE_PRODUCTS_PATH = os.path.join(DATASET_DIR, 'skincare', 'skincare_products_clean.csv')
 REVIEWS_PATHS = [
-    os.path.join(DATASET_DIR, 'sephora', 'reviews_0-250.csv'),
-    os.path.join(DATASET_DIR, 'sephora', 'reviews_250-500.csv'),
-    os.path.join(DATASET_DIR, 'sephora', 'reviews_500-750.csv'),
-    os.path.join(DATASET_DIR, 'sephora', 'reviews_750-1250.csv'),
-    os.path.join(DATASET_DIR, 'sephora', 'reviews_1250-end.csv'),
+    os.path.join(DATASET_DIR, 'sephora', 'reviews_0-250_masked.csv'),
+    os.path.join(DATASET_DIR, 'sephora', 'reviews_250-500_masked.csv'),
+    os.path.join(DATASET_DIR, 'sephora', 'reviews_500-750_masked.csv'),
+    os.path.join(DATASET_DIR, 'sephora', 'reviews_750-1250_masked.csv'),
+    os.path.join(DATASET_DIR, 'sephora', 'reviews_1250-end_masked.csv'),
 ]
 
 # Model save paths

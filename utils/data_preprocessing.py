@@ -241,6 +241,54 @@ def create_user_item_matrix(reviews_df: pd.DataFrame) -> pd.DataFrame:
     return user_item_matrix
 
 
+def calculate_skin_type_metrics(reviews_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Calculate popularity scores for each skin type.
+    
+    Args:
+        reviews_df: Reviews DataFrame with 'skin_type' column
+        
+    Returns:
+        DataFrame with product_id and score columns for each skin type
+    """
+    print("Calculating skin type metrics...")
+    
+    # Clean skin type column
+    reviews_df['skin_type'] = reviews_df['skin_type'].str.lower().str.strip()
+    
+    # Valid skin types from config (hardcoded here to avoid circular import if config not passed)
+    valid_skin_types = ['combination', 'dry', 'normal', 'oily', 'sensitive']
+    
+    # Filter for valid skin types
+    valid_reviews = reviews_df[reviews_df['skin_type'].isin(valid_skin_types)].copy()
+    
+    if len(valid_reviews) == 0:
+        print("Warning: No valid skin type data found in reviews.")
+        return pd.DataFrame()
+
+    # Group by product and skin type
+    grouped = valid_reviews.groupby(['product_id', 'skin_type']).agg(
+        avg_rating=('rating', 'mean'),
+        count=('rating', 'count')
+    ).reset_index()
+    
+    # Calculate popularity score: rating * log(count + 1)
+    grouped['score'] = grouped['avg_rating'] * np.log1p(grouped['count'])
+    
+    # Pivot to get columns like score_dry, score_oily
+    pivoted = grouped.pivot(index='product_id', columns='skin_type', values='score')
+    
+    # Rename columns
+    pivoted.columns = [f'score_{col}' for col in pivoted.columns]
+    
+    # Fill NaN with 0
+    pivoted = pivoted.fillna(0)
+    
+    print(f"Calculated scores for {len(pivoted)} products across skin types")
+    return pivoted
+
+
+
 def preprocess_all_data(sephora_path: str, 
                         skincare_path: str, 
                         reviews_paths: List[str],
@@ -277,6 +325,18 @@ def preprocess_all_data(sephora_path: str,
     
     # Merge and filter
     products_df, reviews_df = merge_products_and_reviews(products_df, reviews_df)
+    
+    # Calculate skin type specific scores
+    skin_type_scores = calculate_skin_type_metrics(reviews_df)
+    
+    if len(skin_type_scores) > 0:
+        print("Merging skin type scores into products data...")
+        products_df = products_df.merge(skin_type_scores, on='product_id', how='left')
+        
+        # Fill missing scores with 0
+        score_cols = [col for col in products_df.columns if col.startswith('score_')]
+        products_df[score_cols] = products_df[score_cols].fillna(0)
+
     
     # Create user-item matrix
     user_item_matrix = create_user_item_matrix(reviews_df)

@@ -130,14 +130,37 @@ class ContentBasedRecommender:
         if len(quality_filtered) == 0:
             return pd.DataFrame()
         
-        # Sort by popularity (rating * log(reviews + 1))
-        quality_filtered['popularity_score'] = (
-            quality_filtered['rating'] * np.log1p(quality_filtered['reviews'])
-        )
+        if len(quality_filtered) == 0:
+            return pd.DataFrame()
+        
+        # Determine sort column
+        sort_col = 'popularity_score'
+        
+        # Calculate global popularity if not already there
+        if 'popularity_score' not in quality_filtered.columns:
+            quality_filtered['popularity_score'] = (
+                quality_filtered['rating'] * np.log1p(quality_filtered['reviews'])
+            )
+            
+        # Check if we have specific skin type scores
+        if skin_type:
+            skin_type_col = f"score_{skin_type.lower()}"
+            if skin_type_col in quality_filtered.columns:
+                # Check if this column has any non-zero values
+                if quality_filtered[skin_type_col].sum() > 0:
+                    sort_col = skin_type_col
+                    # Filter out products with 0 score for this skin type (optional, but good for relevance)
+                    # quality_filtered = quality_filtered[quality_filtered[sort_col] > 0]
         
         # Get top products
-        recommendations = quality_filtered.nlargest(n_recommendations, 'popularity_score')
-        recommendations['cb_score'] = recommendations['popularity_score'] / recommendations['popularity_score'].max()
+        recommendations = quality_filtered.nlargest(n_recommendations, sort_col)
+        
+        # Normalize score for consistent display
+        max_score = recommendations[sort_col].max()
+        if max_score > 0:
+            recommendations['cb_score'] = recommendations[sort_col] / max_score
+        else:
+            recommendations['cb_score'] = 0
         
         return recommendations
     
